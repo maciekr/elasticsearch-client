@@ -88,7 +88,8 @@ class RestlasticSearchClient6Test extends WordSpec with Matchers with BeforeAndA
         analyzerMapping = Analyzers(AnalyzerArray(Analyzer(Name("not_analyzed"), Keyword)), FilterArray()),
         preload = Seq("dvd", "nvm"))
       val indexFut = restClient.createIndex(index, Some(indexSetting))
-      indexFut.futureValue
+      whenReady(indexFut) { _ => refresh(index) }
+
       restClient.runRawEsRequest(
         op = "",
         endpoint = s"/${index.name}/_settings/index.store.preload",
@@ -145,7 +146,7 @@ class RestlasticSearchClient6Test extends WordSpec with Matchers with BeforeAndA
     }
   }
 
-  private def refresh(): Unit = {
+  private def refresh(index: Index = index): Unit = {
     implicit val patienceConfig = PatienceConfig(scaled(Span(1500, Millis)), scaled(Span(15, Millis)))
     restClient.refresh(index).futureValue
   }
